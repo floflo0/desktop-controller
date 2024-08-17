@@ -41,13 +41,12 @@ usage: desktop-controller [-h] [-v] [-l] [CONTROLLER]
 Control your desktop with a controller.
 
 positional arguments:
-    CONTROLLER            the path to the controller to use (example:
-    /dev/input/event20)
+    CONTROLLER            the path to the controller to use (example: /dev/input/event20)
 
-    options:
-        -h, --help            show this help message and exit
-        -v, --version         show program's version number and exit
-        -l, --list            list all available controllers and exit
+options:
+    -h, --help            show this help message and exit
+    -v, --version         show program's version number and exit
+    -l, --list            list all available controllers and exit
 ```
 
 ## Build
@@ -61,5 +60,5 @@ Create an optimized production build by running the following command:
 make PROD=1
 ```
 
-**⚠️ Warning: if you build and then you build with PROD=1, you must force make
+**⚠️ Warning: if you build and then you build with `PROD=1`, you must force make
 to rebuild everything by adding `-B`.**
