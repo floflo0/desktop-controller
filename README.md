@@ -57,8 +57,8 @@ make
 
 Create an optimized production build by running the following command:
 ```sh
-make PROD=1
+make BUILD_MODE=release
 ```
-
-**⚠️ Warning: if you build and then you build with `PROD=1`, you must force make
-to rebuild everything by adding `-B`.**
+> [!WARNING]
+> If you build and then you build with `BUILD_MODE=release`, you must force make
+> to rebuild everything by adding `-B`.
