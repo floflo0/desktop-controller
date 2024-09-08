@@ -24,6 +24,7 @@
 
 #define DEVICE_PATH_SIZE 27
 
+// Mapping buttons to their code
 #define CONTROLLER_BUTTONS                      \
     BUTTON(CONTROLLER_BUTTON_A, BTN_EAST)       \
     BUTTON(CONTROLLER_BUTTON_B, BTN_SOUTH)      \
@@ -47,11 +48,20 @@ struct _Controller {
     uint64_t rumble_start;
 };
 
-static void controller_log_func(const struct libevdev *dev,
-                                enum libevdev_log_priority priority,
-                                void *data, const char *file,
-                                int line, const char *func,
-                                const char *format, va_list args) {
+/**
+ * Logging function use to log error from libevdev.
+ * See libevdev_device_log_func_t.
+ */
+static void controller_log_func(
+    const struct libevdev *dev,
+    enum libevdev_log_priority priority,
+    void *data,
+    const char *file,
+    int line,
+    const char *func,
+    const char *format,
+    va_list args
+) {
     (void)dev;
     (void)data;
 #ifdef PROD
@@ -84,6 +94,15 @@ static void controller_log_func(const struct libevdev *dev,
     return;
 }
 
+/**
+ * Initialize a new libevdev device from the given fd.
+ *
+ * \param fd The file descriptor of the controller device.
+ * \param dev A pointer to a libevdev object pointer that will be set to the new
+ *            device.
+ *
+ * \returns true on success, or false on failure.
+ */
 static bool controller_init_libevdev(const int fd, struct libevdev **dev) {
     *dev = libevdev_new();
     libevdev_set_device_log_function(
@@ -106,6 +125,13 @@ static bool controller_init_libevdev(const int fd, struct libevdev **dev) {
     return true;
 }
 
+/**
+ * Check if a device has the required events to be a controller.
+ *
+ * \param dev The device to check.
+ *
+ * \returns true if the device matchs the requirements to be a controller.
+ */
 static bool is_controller(struct libevdev *dev) {
     return (
         libevdev_has_event_type(dev, EV_ABS) &&
@@ -129,6 +155,11 @@ static bool is_controller(struct libevdev *dev) {
 
 #ifndef PROD
 #define controller_dump_info(controller) _controller_dump_info(controller)
+/**
+ * Print the informations about a controller device.
+ *
+ * \param controller A pointer to the controller object.
+ */
 static void _controller_dump_info(const Controller *controller) {
     log_debugf("controller name: '%s'", libevdev_get_name(controller->dev));
     const char *phys = libevdev_get_phys(controller->dev);
@@ -142,9 +173,20 @@ static void _controller_dump_info(const Controller *controller) {
 #define controller_dump_info(controller)
 #endif
 
+/**
+ * Initialize a controller from it's fd and libevdev object. The controller need
+ * to closed with controller_destroy().
+ *
+ * Before calling this function, ensure that the provided libevdev object
+ * represents a valid controller by using the is_controller() function.
+ *
+ * \param fd The file descriptor of the controller device.
+ * \param dev A pointer to the libevdev object associated with the controller.
+ *
+ * \returns a pointer to the controller or NULL on failure.
+ */
 static Controller *controller_from_fd_and_dev(const int fd,
                                               struct libevdev *dev) {
-
     Controller *controller = malloc(sizeof(*controller));
     if (!controller) {
         log_errorf("failed to allocate memory: %s", strerror(errno));
@@ -312,6 +354,24 @@ bool controller_list(void) {
 
 #define HAT_INDEX(hat_button) ((hat_button) - CONTROLLER_BUTTON_UP)
 
+/**
+ * This function processes input events from a hat switch (D-pad), updates
+ * the state of the associated buttons and triggers the appropriate button
+ * callbacks.
+ *
+ * \param controller A pointer to the Controller object that is receiving the
+ *                   event.
+ * \param event A pointer to the input event structure containing the hat switch
+ *              event.
+ * \param button_positive The button associated with the positive direction of
+ *                        the hat switch.
+ * \param button_negative The button associated with the negative direction of
+ *                        the hat switch.
+ * \param on_button_down A callback function that is invoked when a button
+ *                       is pressed down.
+ * \param on_button_up A callback function that is invoked when a button
+ *                     is released.
+ */
 static void controller_handle_hat_event(
     Controller *controller,
     const struct input_event *event,
@@ -350,6 +410,19 @@ static void controller_handle_hat_event(
     }
 }
 
+/**
+ * Handles input events for the controller and triggers the appropriate button
+ * callbacks.
+ *
+ * \param controller A pointer to the Controller object that is receiving the
+ *                   event.
+ * \param event A pointer to the input event structure containing the event
+ *              data.
+ * \param on_button_down A callback function that is invoked when a button
+ *                       is pressed down.
+ * \param on_button_up A callback function that is invoked when a button
+ *                     is released.
+ */
 static void controller_handle_event(
     Controller *controller,
     const struct input_event *event,
@@ -413,6 +486,18 @@ static void controller_handle_event(
     }
 }
 
+/**
+ * Handles synchronization of dropped events after an input event overflow.
+ *
+ * \param controller A pointer to the Controller object that is receiving the
+ *                   event.
+ * \param on_button_down A callback function that is invoked when a button
+ *                       is pressed down.
+ * \param on_button_up A callback function that is invoked when a button
+ *                     is released.
+ *
+ * \returns true on success, or false on failure.
+ */
 static bool controller_handle_syn_dropped(
     Controller *controller,
     const ControllerButtonEventCallBack on_button_down,
@@ -440,6 +525,14 @@ static bool controller_handle_syn_dropped(
     return true;
 }
 
+/**
+ * Stop the rumble effect.
+ *
+ * \param controller A pointer to the controller object to stop the rumble
+ *                   effect.
+ *
+ * \returns true on success, or false on failure.
+ */
 static bool controller_stop_rumble(Controller *controller) {
     struct input_event stop;
     stop.type = EV_FF;

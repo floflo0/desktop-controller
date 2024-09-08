@@ -5,7 +5,7 @@
 
 #include "utils.h"
 
-bool streq(const char *string1, const char *string2){
+bool streq(const char *string1, const char *string2) {
     return strcmp(string1, string2) == 0;
 }
 

@@ -27,7 +27,7 @@ void log_quit(void) {
 }
 
 void _log_errorf(file_and_line_param const char *format, ...) {
-    assert(program_name && "log module hasn't been initializedd");
+    assert(program_name && "log module hasn't been initialized");
 #ifndef PROD
     fprintf(stderr, "%s:%lu: ", file, line);
 #endif
