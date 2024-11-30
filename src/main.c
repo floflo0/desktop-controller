@@ -114,10 +114,10 @@ static bool args_parse(Args *args, char *argv[], const char *program_name) {
         if ((*argv)[0] == '-' && (*argv)[1]) {
             if ((*argv)[1] == '-') {
 #define FLAG(name, short_name, description) \
-        if (streq(*argv, "--" #name)) {     \
-            args->name = true;              \
-            continue;                       \
-        }
+    if (streq(*argv, "--" #name)) {         \
+        args->name = true;                  \
+        continue;                           \
+    }
     ARGS_FLAGS
 #undef FLAG
             } else {
@@ -137,6 +137,14 @@ static bool args_parse(Args *args, char *argv[], const char *program_name) {
                 continue;
             }
         }
+
+#define PARAM(field, name, description) \
+    if (args->field == NULL) { \
+        args->field = *argv; \
+        continue; \
+    }
+    ARGS_PARAMS
+#undef PARAM
 
         print_usage(program_name, stderr);
         log_errorf("unrecognized arguments: '%s'", *argv);
@@ -302,8 +310,6 @@ static void hanlde_sigint(const int _) {
 
 int main(const int argc, char *argv[]) {
     (void)argc;
-
-    log_debugf("test");
 
     assert(*argv && "no program name");
     const char *program_name = basename(*argv++);

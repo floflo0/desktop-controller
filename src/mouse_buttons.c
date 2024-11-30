@@ -9,4 +9,4 @@ char *mouse_button_to_string(const MouseButton mouse_button) {
 #undef MOUSE_BUTTON
     assert(false && "unreachable");
     return "";
-};
+}
